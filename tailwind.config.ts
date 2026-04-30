@@ -8,6 +8,7 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      // Tailwind CSS Custom Configuration
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
