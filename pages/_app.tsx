@@ -9,12 +9,24 @@ import {
   QueryClientProvider,
 } from "@tanstack/react-query";
 import React from "react";
+import type { ReactElement, ReactNode } from "react";
+import type { NextPage } from "next";
+
+export type NextPageWithLayout<P = object, IP = P> = NextPage<P, IP> & {
+  getLayout?: (page: ReactElement) => ReactNode;
+};
+
+type AppPropsWithLayout = AppProps & {
+  Component: NextPageWithLayout;
+};
 
 export default function App({
   Component,
   pageProps: { session, ...pageProps },
-}: AppProps) {
+}: AppPropsWithLayout) {
   const [queryClient] = React.useState(() => new QueryClient());
+  // Use the layout defined at the page level, if available
+  const getLayout = Component.getLayout ?? ((page) => <Layout>{page}</Layout>);
 
   return (
     <>
@@ -22,9 +34,7 @@ export default function App({
       <QueryClientProvider client={queryClient}>
         <HydrationBoundary state={pageProps.dehydratedState}>
           <SessionProvider session={session}>
-            <Layout>
-              <Component {...pageProps} />
-            </Layout>
+            {getLayout(<Component {...pageProps} />)}
           </SessionProvider>
         </HydrationBoundary>
       </QueryClientProvider>
