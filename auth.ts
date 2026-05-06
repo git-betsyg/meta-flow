@@ -10,6 +10,9 @@ import CredentialsProvider from "next-auth/providers/credentials";
 // You'll need to import and pass this
 // to `NextAuth` in `pages/api/auth/[...nextauth].ts`
 export const config = {
+  pages: {
+    signIn: '/login',
+  },
   providers: [
     CredentialsProvider({
       // The name to display on the sign in form (e.g. 'Sign in with...')
