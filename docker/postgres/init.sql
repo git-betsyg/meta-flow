@@ -203,17 +203,16 @@ DROP TABLE IF EXISTS users CASCADE;
 CREATE TABLE users (
   id BIGSERIAL PRIMARY KEY,
 
-  email TEXT NOT NULL UNIQUE,
-  username TEXT UNIQUE,
+  username TEXT NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
 
-  password_hash TEXT,
+  email TEXT UNIQUE,
 
   nickname TEXT,
   avatar_url TEXT,
 
-  role TEXT NOT NULL DEFAULT 'user',
-
-  status TEXT NOT NULL DEFAULT 'active',
+  role TEXT DEFAULT 'user',
+  status TEXT DEFAULT 'active',
 
   last_login_at TIMESTAMP,
 
@@ -224,6 +223,9 @@ CREATE TABLE users (
 -- ============================
 -- indexes
 -- ============================
+
+CREATE INDEX idx_users_username
+ON users(username);
 
 CREATE INDEX idx_users_email
 ON users(email);

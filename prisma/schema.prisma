@@ -1,0 +1,140 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model monitor_configs {
+  id                       BigInt            @id @default(autoincrement())
+  name                     String
+  enabled                  Boolean?          @default(true)
+  region_code              String?           @default("US")
+  category_id              String?           @default("0")
+  time_period              Int?              @default(7)
+  max_results              Int?              @default(10)
+  min_view_count           Int?              @default(0)
+  min_like_count           Int?              @default(0)
+  min_comment_count        Int?              @default(0)
+  keywords                 String?           @default("")
+  exclude_keywords         String?           @default("")
+  channel_ids              String?           @default("")
+  exclude_channel_ids      String?           @default("")
+  min_duration             Int?              @default(0)
+  max_duration             Int?              @default(0)
+  schedule_type            String?           @default("manual")
+  schedule_interval        Int?              @default(120)
+  order_by                 String?           @default("viewCount")
+  start_date               String?           @default("")
+  end_date                 String?           @default("")
+  rate_limit_requests      Int?              @default(20)
+  rate_limit_window        Int?              @default(60)
+  last_run_time            String?
+  created_time             DateTime?         @default(now()) @db.Timestamp(6)
+  updated_time             DateTime?         @default(now()) @db.Timestamp(6)
+  auto_add_to_tasks        Boolean?          @default(false)
+  monitor_type             String?           @default("youtube_search")
+  channel_mode             String?           @default("latest")
+  channel_keywords         String?           @default("")
+  latest_days              Int?              @default(7)
+  latest_max_results       Int?              @default(20)
+  video_types              String?           @default("video,short,live")
+  historical_progress_date String?           @default("")
+  historical_offset        Int?              @default(0)
+  monitor_history          monitor_history[]
+}
+
+model monitor_history {
+  id              BigInt           @id @default(autoincrement())
+  config_id       BigInt?
+  video_id        String
+  video_type      String?
+  video_title     String?
+  channel_title   String?
+  view_count      Int?
+  like_count      Int?
+  comment_count   Int?
+  duration        String?
+  published_at    String?
+  added_to_tasks  Boolean?         @default(false)
+  run_time        DateTime?        @default(now()) @db.Timestamp(6)
+  monitor_configs monitor_configs? @relation(fields: [config_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model notification_outbox {
+  id            String    @id
+  channel       String
+  event_type    String
+  payload_json  String
+  status        String    @default("pending")
+  attempts      Int       @default(0)
+  next_retry_at DateTime? @db.Timestamp(6)
+  last_error    String?
+  created_at    DateTime? @default(now()) @db.Timestamp(6)
+  updated_at    DateTime? @default(now()) @db.Timestamp(6)
+
+  @@index([status, next_retry_at, created_at], map: "idx_notification_outbox_status_retry")
+}
+
+model schema_migrations {
+  migration_key String    @id
+  applied_at    DateTime? @default(now()) @db.Timestamp(6)
+}
+
+model tasks {
+  id                                String    @id
+  youtube_url                       String
+  upload_target                     String?   @default("acfun")
+  status                            String
+  created_at                        DateTime? @default(now()) @db.Timestamp(6)
+  updated_at                        DateTime? @default(now()) @db.Timestamp(6)
+  video_title_original              String?
+  video_title_translated            String?
+  description_original              String?
+  description_translated            String?
+  tags_generated                    String?
+  recommended_partition_id          String?
+  selected_partition_id             String?
+  recommended_partition_id_acfun    String?
+  selected_partition_id_acfun       String?
+  recommended_partition_id_bilibili String?
+  selected_partition_id_bilibili    String?
+  cover_path_local                  String?
+  video_path_local                  String?
+  subtitle_path_original            String?
+  subtitle_path_translated          String?
+  subtitle_language_detected        String?
+  subtitle_qc_failed                Boolean?  @default(false)
+  subtitle_qc_reason                String?
+  subtitle_qc_score                 Float?
+  subtitle_qc_checked_at            DateTime? @db.Timestamp(6)
+  metadata_json_path_local          String?
+  moderation_result                 String?
+  error_message                     String?
+  pipeline_checkpoint               String?
+  upload_progress                   String?
+  acfun_upload_response             String?
+  bilibili_upload_response          String?
+  asr_warning_message               String?
+}
+
+model users {
+  id            BigInt    @id @default(autoincrement())
+  username      String    @unique
+  password_hash String
+  email         String?   @unique
+  nickname      String?
+  avatar_url    String?
+  role          String?   @default("user")
+  status        String?   @default("active")
+  last_login_at DateTime? @db.Timestamp(6)
+  created_at    DateTime? @default(now()) @db.Timestamp(6)
+  updated_at    DateTime? @default(now()) @db.Timestamp(6)
+
+  @@index([email], map: "idx_users_email")
+  @@index([role], map: "idx_users_role")
+  @@index([status], map: "idx_users_status")
+  @@index([username], map: "idx_users_username")
+}

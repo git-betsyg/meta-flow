@@ -8,7 +8,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -22,6 +21,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useMutation } from "@tanstack/react-query";
+import { request } from "@/lib/request";
 
 export const formSchema = z
   .object({
@@ -57,8 +58,24 @@ export default function SignUp() {
     },
   });
 
+  const mutation = useMutation({
+    mutationFn: async (data: { username: string; password: string }) => {
+      const res = await request.post("/api/sign-up", data);
+      return res.data;
+    },
+    onSuccess: () => {
+      form.reset();
+    },
+    onError: (err: any) => {
+      alert(err?.response?.data?.message || "注册失败");
+    },
+  });
+
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
+    mutation.mutate({
+      username: values.username,
+      password: values.password,
+    });
   }
 
   return (
