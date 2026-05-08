@@ -6,12 +6,14 @@ import type {
 import type { NextAuthOptions } from "next-auth";
 import { getServerSession } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import prisma from "@/lib/prisma";
+import bcrypt from "bcryptjs";
 
 // You'll need to import and pass this
 // to `NextAuth` in `pages/api/auth/[...nextauth].ts`
 export const config = {
   pages: {
-    signIn: '/login',
+    signIn: "/login",
   },
   providers: [
     CredentialsProvider({
@@ -22,7 +24,7 @@ export const config = {
       // e.g. domain, username, password, 2FA token, etc.
       // You can pass any HTML attribute to the <input> tag through the object.
       credentials: {
-        username: { label: "Username", type: "text", placeholder: "jsmith" },
+        username: { label: "Username", type: "text" },
         password: { label: "Password", type: "password" },
       },
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -33,16 +35,52 @@ export const config = {
         // e.g. return { id: 1, name: 'J Smith', email: 'jsmith@example.com' }
         // You can also use the `req` object to obtain additional parameters
         // (i.e., the request IP address)
-        const res = await fetch("/your/endpoint", {
-          method: "POST",
-          body: JSON.stringify(credentials),
-          headers: { "Content-Type": "application/json" },
+
+        const username = credentials?.username;
+        const password = credentials?.password;
+
+        if (!username || !password) {
+          return null;
+        }
+
+        // 1. 查用户（用 username 登录）
+        const user = await prisma.users.findUnique({
+          where: {
+            username,
+          },
         });
-        const user = await res.json();
+
+        if (!user) {
+          return null;
+        }
+        // 2. 检查状态
+        if (user.status !== "active") {
+          return null;
+        }
+
+        // 3. 校验密码
+        const isValid = await bcrypt.compare(password, user.password_hash);
+
+        if (!isValid) {
+          return null;
+        }
+
+        // 4. 更新最后登录时间
+        await prisma.users.update({
+          where: {
+            id: user.id,
+          },
+          data: {
+            last_login_at: new Date(),
+          },
+        });
 
         // If no error and we have user data, return it
-        if (res.ok && user) {
-          return user;
+        if (user) {
+          return {
+            id: Number(user.id),
+            username: user.username,
+          };
         }
         // Return null if user data could not be retrieved
         return null;
@@ -50,21 +88,29 @@ export const config = {
     }),
   ],
   callbacks: {
-    async jwt({ token, account, trigger, session }) {
+    async jwt({ token, trigger, session, user }) {
       if (trigger === "update" && session?.name) {
         // Note, that `session` can be any arbitrary object, remember to validate it!
         token.name = session.name;
       }
       // Persist the OAuth access_token to the token right after signin
-      if (account && account?.access_token) {
-        token.accessToken = account.access_token;
+      if (user) {
+        token.username = user.username;
+        token.id = user.id as number;
       }
       return token;
     },
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async session({ session, token, user }) {
       // Send properties to the client, like an access_token from a provider.
-      if (token && token?.accessToken) session.accessToken = token.accessToken;
+      if (token && token?.accessToken) {
+        session.accessToken = token.accessToken;
+        session.user = {
+          ...session.user,
+          id: token.id,
+          username: token.username,
+        };
+      }
       return session;
     },
   },
@@ -83,11 +129,23 @@ export function auth(
 declare module "next-auth" {
   interface Session {
     accessToken?: string;
+
+    user: {
+      id?: number;
+      username?: string;
+    };
+  }
+
+  interface User {
+    id: number;
+    username: string;
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
     accessToken?: string;
+    username?: string;
+    id?: number;
   }
 }

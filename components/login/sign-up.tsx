@@ -23,6 +23,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useMutation } from "@tanstack/react-query";
 import { request } from "@/lib/request";
+import { useState } from "react";
 
 export const formSchema = z
   .object({
@@ -49,6 +50,8 @@ export const formSchema = z
   });
 
 export default function SignUp() {
+  const [open, setOpen] = useState(false);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -64,6 +67,7 @@ export default function SignUp() {
       return res.data;
     },
     onSuccess: () => {
+      setOpen(false);
       form.reset();
     },
     onError: (err: any) => {
@@ -79,7 +83,7 @@ export default function SignUp() {
   }
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <a href="#" className="underline underline-offset-4">
           注册

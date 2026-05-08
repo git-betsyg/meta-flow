@@ -10,8 +10,28 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import SignUp from "@/components/login/sign-up";
+import { signIn } from "next-auth/react";
+import { useState } from "react";
 
 export default function Page() {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+
+    const res = await signIn("credentials", {
+      username,
+      password,
+      redirect: false,
+    });
+
+    if (res?.error) {
+      return;
+    }
+
+    window.location.href = "/";
+  }
   return (
     <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
       <div className="w-full max-w-sm">
@@ -24,13 +44,15 @@ export default function Page() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form>
+              <form onSubmit={onSubmit}>
                 <div className="flex flex-col gap-6">
                   <div className="grid gap-2">
-                    <Label htmlFor="email">用户名</Label>
+                    <Label htmlFor="username">用户名</Label>
                     <Input
-                      id="email"
-                      type="email"
+                      id="username"
+                      value={username}
+                      type="username"
+                      onChange={(e) => setUsername(e.target.value)}
                       required
                     />
                   </div>
@@ -44,15 +66,20 @@ export default function Page() {
                         忘记密码？
                       </a>
                     </div>
-                    <Input id="password" type="password" required />
+                    <Input
+                      id="password"
+                      type="password"
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
                   </div>
                   <Button type="submit" className="w-full">
                     登录
                   </Button>
                 </div>
                 <div className="mt-4 text-center text-sm">
-                  还没有账号？{" "}
-                  <SignUp/>
+                  还没有账号？ <SignUp />
                 </div>
               </form>
             </CardContent>
