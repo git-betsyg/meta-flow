@@ -114,13 +114,13 @@ const data = {
       ],
     },
     {
-      title: "Settings",
+      title: "设置",
       url: "#",
       icon: Settings2,
       items: [
         {
-          title: "General",
-          url: "#",
+          title: "运行概览",
+          url: "/setting",
         },
         {
           title: "Team",

@@ -10,7 +10,9 @@ export default async function handler(
     const { username, password } = req.body;
 
     if (!username || !password) {
-      return res.status(400).json({ message: "username 和 password 必填" });
+      return res
+        .status(400)
+        .json({ success: false, errorMessage: "username 和 password 必填" });
     }
 
     // 1. 检查用户是否存在
@@ -21,7 +23,9 @@ export default async function handler(
     });
 
     if (exists) {
-      return res.status(400).json({ message: "用户已存在" });
+      return res
+        .status(400)
+        .json({ success: false, errorMessage: "用户已存在" });
     }
 
     // 2. 密码加密
@@ -36,15 +40,16 @@ export default async function handler(
     });
 
     return res.status(200).json({
-      message: "创建成功",
-      user: {
+      success: true,
+      data: {
         id: user.id.toString(),
         username: user.username,
-        email: user.email,
       },
     });
   } else {
     res.setHeader("Allow", ["POST"]);
-    return res.status(405).end(`方法 ${req.method} 不允许`);
+    return res
+      .status(405)
+      .json({ success: false, errorMessage: `方法 ${req.method} 不允许` });
   }
 }

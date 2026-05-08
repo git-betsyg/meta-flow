@@ -11,6 +11,18 @@ import {
 import React from "react";
 import type { ReactElement, ReactNode } from "react";
 import type { NextPage } from "next";
+import localFont from "next/font/local";
+
+const geistSans = localFont({
+  src: "../fonts/GeistVF.woff",
+  variable: "--font-geist-sans",
+  weight: "100 900",
+});
+const geistMono = localFont({
+  src: "../fonts/GeistMonoVF.woff",
+  variable: "--font-geist-mono",
+  weight: "100 900",
+});
 
 export type NextPageWithLayout<P = object, IP = P> = NextPage<P, IP> & {
   getLayout?: (page: ReactElement) => ReactNode;
@@ -34,7 +46,9 @@ export default function App({
       <QueryClientProvider client={queryClient}>
         <HydrationBoundary state={pageProps.dehydratedState}>
           <SessionProvider session={session}>
-            {getLayout(<Component {...pageProps} />)}
+            <div className={`${geistSans.variable} ${geistMono.variable} `}>
+              {getLayout(<Component {...pageProps} />)}
+            </div>
           </SessionProvider>
         </HydrationBoundary>
       </QueryClientProvider>

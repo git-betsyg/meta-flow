@@ -10,6 +10,7 @@ export interface PaginatedData<T> {
 export interface ApiResponse<T> {
   success: boolean // 请求是否成功
   data?: T         // 响应数据（失败时可能为空）
+  errorMessage?: string // 错误信息
 }
 
 /** 分页接口响应（ApiResponse + PaginatedData 的组合） */
