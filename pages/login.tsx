@@ -12,6 +12,11 @@ import { Label } from "@/components/ui/label";
 import SignUp from "@/components/login/sign-up";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
+import type { ReactElement } from "react";
+
+Page.getLayout = function getLayout(page: ReactElement) {
+  return <>{page}</>;
+};
 
 export default function Page() {
   const [username, setUsername] = useState("");
